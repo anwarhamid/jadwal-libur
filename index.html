@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Libur Karyawan v2 - Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --rizky: #6d1b31; --farhan: #a020f0; --krisna: #ffff00;
+            --putri: #ffa500; --siliya: #00ffff; --taufiq: #00ff00;
+            --aprilia: #0000ff; --primary: #d32f2f;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Navigation */
+        nav { background: #333; color: white; display: flex; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        nav div { padding: 15px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
+        nav div:hover { background: #444; }
+        nav div.active { border-bottom: 3px solid var(--primary); background: #444; }
+
+        .view { display: none; padding: 20px; flex: 1; overflow-y: auto; }
+        .view.active { display: block; }
+
+        /* Page Layouts */
+        .flex-container { display: flex; gap: 25px; }
+        .control-panel { width: 300px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 0; }
+        
+        /* Dashboard Styling */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .month-filter { padding: 10px; border-radius: 8px; font-size: 16px; width: 200px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 5px solid #ddd; }
+        
+        /* Calendar Styling */
+        .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .month-box { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .month-title { background: #000; color: white; text-align: center; padding: 10px; font-weight: bold; }
+        .days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+        .day-lbl { background: #eee; font-size: 12px; padding: 5px 0; font-weight: bold; border: 0.1px solid #ddd; }
+        .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border: 0.1px solid #f0f0f0; cursor: pointer; }
+        .day.empty { background: #fafafa; cursor: default; }
+
+        /* Employee Colors */
+        .opt { display: flex; align-items: center; padding: 10px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
+        .opt.active { border-color: var(--primary); background: #fff5f5; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; border: 1px solid #999; }
+        
+        .bg-rizky { background: var(--rizky); color: white; }
+        .bg-farhan { background: var(--farhan); color: white; }
+        .bg-krisna { background: var(--krisna); color: black; }
+        .bg-putri { background: var(--putri); color: white; }
+        .bg-siliya { background: var(--siliya); color: black; }
+        .bg-taufiq { background: var(--taufiq); color: black; }
+        .bg-aprilia { background: var(--aprilia); color: white; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-item active" onclick="switchView('control-view')">Kontrol & Kalender</div>
+        <div class="nav-item" onclick="switchView('dashboard-view')">Dashboard Laporan</div>
+    </nav>
+
+    <div id="control-view" class="view active">
+        <div class="flex-container">
+            <div class="control-panel">
+                <h3>Pilih Karyawan</h3>
+                <div id="employee-selection">
+                    <div class="opt active" data-user="rizky"><span class="dot" style="background:var(--rizky)"></span> RIZKY</div>
+                    <div class="opt" data-user="farhan"><span class="dot" style="background:var(--farhan)"></span> FARHAN</div>
+                    <div class="opt" data-user="krisna"><span class="dot" style="background:var(--krisna)"></span> KRISNA</div>
+                    <div class="opt" data-user="putri"><span class="dot" style="background:var(--putri)"></span> PUTRI</div>
+                    <div class="opt" data-user="siliya"><span class="dot" style="background:var(--siliya)"></span> SILIYA</div>
+                    <div class="opt" data-user="taufiq"><span class="dot" style="background:var(--taufiq)"></span> TAUFIQ</div>
+                    <div class="opt" data-user="aprilia"><span class="dot" style="background:var(--aprilia)"></span> APRILIA</div>
+                    <div class="opt" data-user="none"><span class="dot" style="background:white"></span> Hapus Warna</div>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 20px;">* Klik tanggal pada kalender untuk mengisi jadwal.</p>
+            </div>
+            <div class="calendar-grid" id="calendar-container"></div>
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="view">
+        <div class="dashboard-header">
+            <h1>Laporan Libur Karyawan</h1>
+            <select id="filter-month" class="month-filter" onchange="updateDashboard()">
+                </select>
+        </div>
+        <div class="stats-grid" id="stats-container">
+            </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIG FIREBASE (GANTI DENGAN MILIK ANDA) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlzi3Egf-L9Fz0tE-YZLDDtAEWs97cAW4",
+            authDomain: "jadwal-libur-f38db.firebaseapp.com",
+            databaseURL: "https://jadwal-libur-f38db-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jadwal-libur-f38db",
+            storageBucket: "jadwal-libur-f38db.firebasestorage.app",
+            messagingSenderId: "123733774698",
+            appId: "1:123733774698:web:e3bf19d569d8831d7fd513",
+            measurementId: "G-H3W268K4HG"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. DATA UTAMA ---
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const users = ["rizky", "farhan", "krisna", "putri", "siliya", "taufiq", "aprilia"];
+        let selectedUser = "rizky";
+        let allData = {};
+
+        // --- 3. LOGIKA NAVIGASI ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(viewId === 'dashboard-view') updateDashboard();
+        }
+
+        // --- 4. LOGIKA KALENDER ---
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            container.innerHTML = '';
+            
+            for (let m = 0; m < 12; m++) {
+                const box = document.createElement('div');
+                box.className = 'month-box';
+                box.innerHTML = `<div class="month-title">${months[m]} 2026</div>`;
+                
+                const daysDiv = document.createElement('div');
+                daysDiv.className = 'days';
+                ["S", "M", "T", "W", "T", "F", "S"].forEach(d => daysDiv.innerHTML += `<div class="day-lbl">${d}</div>`);
+
+                const firstDay = new Date(2026, m, 1).getDay();
+                const totalDays = new Date(2026, m + 1, 0).getDate();
+
+                for (let i = 0; i < firstDay; i++) daysDiv.innerHTML += `<div class="day empty"></div>`;
+
+                for (let d = 1; d <= totalDays; d++) {
+                    const dateId = `2026-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day';
+                    dayEl.id = `date-${dateId}`;
+                    dayEl.innerText = d;
+                    
+                    // Style jika sudah ada data
+                    if (allData[dateId]) dayEl.classList.add(`bg-${allData[dateId]}`);
+
+                    dayEl.onclick = () => {
+                        if (selectedUser === 'none') {
+                            db.ref('holidays/' + dateId).remove();
+                        } else {
+                            db.ref('holidays/' + dateId).set(selectedUser);
+                        }
+                    };
+                    daysDiv.appendChild(dayEl);
+                }
+                box.appendChild(daysDiv);
+                container.appendChild(box);
+            }
+        }
+
+        // --- 5. LOGIKA DASHBOARD ---
+        function updateDashboard() {
+            const monthVal = document.getElementById('filter-month').value;
+            const container = document.getElementById('stats-container');
+            container.innerHTML = '';
+
+            const counts = {};
+            users.forEach(u => counts[u] = 0);
+
+            // Hitung berdasarkan filter bulan
+            Object.keys(allData).forEach(date => {
+                if (date.startsWith(`2026-${monthVal}`)) {
+                    const user = allData[date];
+                    if (counts[user] !== undefined) counts[user]++;
+                }
+            });
+
+            users.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.style.borderTopColor = `var(--${u})`;
+                card.innerHTML = `
+                    <h3 style="text-transform:uppercase">${u}</h3>
+                    <div style="font-size:32px; font-weight:bold">${counts[u]}</div>
+                    <p>Hari Libur</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- 6. INISIALISASI ---
+        function init() {
+            // Isi dropdown bulan
+            const filterMonth = document.getElementById('filter-month');
+            months.forEach((m, idx) => {
+                filterMonth.innerHTML += `<option value="${String(idx+1).padStart(2, '0')}">${m}</option>`;
+            });
+            filterMonth.value = String(new Date().getMonth() + 1).padStart(2, '0');
+
+            // Setup klik karyawan
+            document.querySelectorAll('.opt').forEach(opt => {
+                opt.onclick = function() {
+                    document.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedUser = this.dataset.user;
+                };
+            });
+
+            // Listen data dari Firebase (Realtime)
+            db.ref('holidays').on('value', (snapshot) => {
+                allData = snapshot.val() || {};
+                renderCalendar();
+                updateDashboard();
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
