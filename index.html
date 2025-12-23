@@ -156,6 +156,13 @@
         .stat-card .count { font-size: 32px; font-weight: 800; color: #1e293b; }
 
         @media (max-width: 768px) { nav { padding: 0 10px; } .view { padding: 15px; } }
+        /* Menambahkan indikator visual kecil di bawah angka untuk libur nasional */
+        .day[title] .date-num::after {
+            content: '•';
+            display: block;
+            font-size: 10px;
+            line-height: 0;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +211,26 @@
         const db = firebase.database();
 
         const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        // Tambahkan data libur nasional 2026
+        const nationalHolidays = {
+            "2026-01-01": "New Year's Day",
+            "2026-01-16": "Ascension of the Prophet Muhammad",
+            "2026-02-17": "Chinese New Year's Day",
+            "2026-03-19": "Nyepi (Hindu New Year)",
+            "2026-03-20": "Idul Fitri Day 1",
+            "2026-03-21": "Idul Fitri Day 2",
+            "2026-04-03": "Good Friday",
+            "2026-04-05": "Easter Sunday",
+            "2026-05-01": "International Labor Day",
+            "2026-05-14": "Ascension Day of Jesus Christ",
+            "2026-05-27": "Idul Adha",
+            "2026-05-31": "Waisak Day",
+            "2026-06-01": "Pancasila Day",
+            "2026-06-16": "Islamic New Year",
+            "2026-08-17": "Indonesian Independence Day",
+            "2026-08-25": "Maulid Nabi Muhammad",
+            "2026-12-25": "Christmas Day"
+        };
         const users = ["anwar", "kezia", "alfrian", "grazica", "mulya"];
         let selectedUser = "anwar";
         let allData = {};
@@ -233,12 +260,58 @@
                     const dateId = `2026-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                     const dayEl = document.createElement('div');
                     dayEl.className = 'day';
-                    const nameDisp = allData[dateId] ? allData[dateId] : "";
+                    
+                    const userData = allData[dateId];
+                    const holidayName = nationalHolidays[dateId]; // Mengambil data dari daftar libur nasional
+
+                    // --- LOGIKA PERBAIKAN ---
+                    
+                    // A. Selalu cek Libur Nasional terlebih dahulu untuk WARNA ANGKA
+                    if (holidayName) {
+                        dayEl.style.color = "red"; // Angka menjadi merah
+                        dayEl.style.fontWeight = "bold";
+                        dayEl.title = holidayName; // Keterangan muncul saat kursor diarahkan (hover)
+                    }
+
+                    // B. Cek Jadwal Karyawan untuk WARNA BACKGROUND
+                    if (userData) {
+                        dayEl.classList.add(`bg-${userData}`); // Tetap memberi warna background karyawan
+                        
+                        // Agar angka merah tetap terlihat di background gelap (kecuali Alfrian/Mulya yang kuning/cyan)
+                        if (holidayName && (userData !== 'alfrian' && userData !== 'mulya')) {
+                            dayEl.style.color = "#ffcccc"; // Warna merah muda agar kontras di background gelap
+                        }
+                    }
+                    // ------------------------
+
+                    const nameDisp = userData ? userData.toUpperCase() : "";
                     dayEl.innerHTML = `<span class="date-num">${d}</span><span class="emp-name">${nameDisp}</span>`;
-                    if (allData[dateId]) dayEl.classList.add(`bg-${allData[dateId]}`);
+                    
                     dayEl.onclick = () => {
-                        if (selectedUser === 'none') db.ref('holidays/' + dateId).remove();
-                        else db.ref('holidays/' + dateId).set(selectedUser);
+                        // 1. Jika user memilih 'Hapus Warna' (selectedUser === 'none'), langsung eksekusi hapus
+                        if (selectedUser === 'none') {
+                            db.ref('holidays/' + dateId).remove();
+                            return;
+                        }
+
+                        // 2. Jika user memilih nama karyawan, lakukan pengecekan kuota bulan tersebut
+                        // Kita hitung berapa kali nama tersebut muncul di bulan 'm' (indeks bulan saat ini)
+                        let count = 0;
+                        const currentMonthPrefix = `2026-${String(m + 1).padStart(2, '0')}`;
+                        
+                        Object.keys(allData).forEach(date => {
+                            if (date.startsWith(currentMonthPrefix) && allData[date] === selectedUser) {
+                                count++;
+                            }
+                        });
+
+                        // 3. Logika Validasi Maksimal 4 Hari
+                        if (count >= 5 && allData[dateId] !== selectedUser) {
+                            alert(`Karyawan ${selectedUser.toUpperCase()} sudah mencapai maksimal libur (5 hari) di bulan ${months[m]}!`);
+                        } else {
+                            // Jika belum mencapai 4 hari, simpan ke database
+                            db.ref('holidays/' + dateId).set(selectedUser);
+                        }
                     };
                     daysDiv.appendChild(dayEl);
                 }
@@ -290,6 +363,7 @@
             });
         }
         init();
+        
     </script>
 </body>
 </html>
