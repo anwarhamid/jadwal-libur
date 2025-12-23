@@ -336,7 +336,47 @@
                     `;
                     
                     dayEl.onclick = () => {
-                        // ... (logika confirm dan kuota tetap seperti sebelumnya)
+                        // 1. LOGIKA HAPUS (HARUS DI PALING ATAS)
+                        // Jika user memilih 'Hapus Warna' (none), izinkan tanpa cek kuota
+                        if (selectedUser === 'none') {
+                            if (allData[dateId]) { 
+                                const yakinHapus = confirm(`Apakah anda tidak jadi libur di tanggal ${d} ${months[m]} 2026?`);
+                                if (yakinHapus) {
+                                    db.ref('holidays/' + dateId).remove();
+                                }
+                            }
+                            return; // Keluar dari fungsi setelah hapus
+                        }
+
+                        // 2. CEK APAKAH TANGGAL SUDAH DIISI ORANG LAIN
+                        // Mencegah karyawan menimpa jadwal temannya tanpa sengaja
+                        if (allData[dateId] && allData[dateId] !== selectedUser) {
+                            alert(`Tanggal ini sudah diambil oleh ${allData[dateId].toUpperCase()}. Gunakan 'Hapus Warna' terlebih dahulu jika ingin mengganti.`);
+                            return;
+                        }
+
+                        // 3. HITUNG KUOTA BULANAN
+                        let count = 0;
+                        const currentMonthPrefix = `2026-${String(m + 1).padStart(2, '0')}`;
+                        
+                        Object.keys(allData).forEach(date => {
+                            if (date.startsWith(currentMonthPrefix) && allData[date] === selectedUser) {
+                                count++;
+                            }
+                        });
+
+                        // 4. VALIDASI MAKSIMAL 4 HARI
+                        // Jika sudah 4 hari DAN tanggal yang diklik belum ada namanya, maka blokir
+                        if (count >= 5 && allData[dateId] !== selectedUser) {
+                            alert(`Karyawan ${selectedUser.toUpperCase()} sudah mencapai maksimal libur (5 hari) di bulan ${months[m]}!`);
+                            return;
+                        }
+
+                        // 5. KONFIRMASI SIMPAN
+                        const yakinLibur = confirm(`Apakah anda libur pada tanggal ${d} ${months[m]} 2026?`);
+                        if (yakinLibur) {
+                            db.ref('holidays/' + dateId).set(selectedUser);
+                        }
                     };
                     
                     daysDiv.appendChild(dayEl);
