@@ -19,11 +19,13 @@
             --accent-hover: #dbeafe;
             
             /* Warna Karyawan Tetap Sesuai Identitas */
-            --anwar: #a87a86; 
-            --kezia: #ffc0cb; 
-            --alfrian: #eab308; /* Yellow Gold */
-            --grazica: #f19d60; /* Orange */
-            --mulya: #70cada;   /* Cyan */
+            --rizky: #99727c; 
+            --farhan: #ffc0cb; 
+            --krisna: #eab308; /* Yellow Gold */
+            --putri: #f19d60; /* Orange */
+            --siliya: #70cada;   /* Cyan */
+            --taufiq: #82f160; /* Orange */
+            --aprilia: #a270da;   /* Cyan */
         }
 
         body { 
@@ -141,11 +143,13 @@
         .day span.emp-name { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 4px; opacity: 0.9; }
         
         /* Warna Background dengan Text Kontras */
-        .bg-anwar { background: var(--anwar) !important; color: white; }
-        .bg-kezia { background: var(--kezia) !important; color: white; }
-        .bg-alfrian { background: var(--alfrian) !important; color: #422006; }
-        .bg-grazica { background: var(--grazica) !important; color: white; }
-        .bg-mulya { background: var(--mulya) !important; color: #083344; }
+        .bg-rizky { background: var(--rizky) !important; color: white; }
+        .bg-farhan { background: var(--farhan) !important; color: white; }
+        .bg-krisna { background: var(--krisna) !important; color: #422006; }
+        .bg-putri { background: var(--putri) !important; color: white; }
+        .bg-siliya { background: var(--siliya) !important; color: #083344; }
+        .bg-taufiq { background: var(--taufiq) !important; color: white; }
+        .bg-aprilia { background: var(--aprilia) !important; color: #083344; }
 
         /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
@@ -195,22 +199,24 @@
         }
 
         /* Pastikan warna teks label nama tetap putih pada background gelap */
-        .bg-anwar .user-label, 
-        .bg-kezia .user-label, 
-        .bg-grazica .user-label {
+        .bg-rizky .user-label, 
+        .bg-farhan .user-label, 
+        .bg-krisna .user-label, 
+        .bg-putri .user-label,
+        .bg-siliya .user-label {
             color: white !important;
         }
 
         /* Pastikan warna teks label nama tetap hitam pada background terang */
-        .bg-alfrian .user-label, 
-        .bg-mulya .user-label {
-            color: white !important;
+        .bg-taufiq .user-label, 
+        .bg-aprilia .user-label {
+            color: black !important;
         }
 
         /* Tambahan: Jika tanggal libur ada di background gelap, 
         buat label liburnya sedikit lebih terang agar tetap terbaca */
-        .bg-anwar .holiday-label, 
-        .bg-kezia .holiday-label {
+        .bg-rizky .holiday-label, 
+        .bg-farhan .holiday-label {
             color: #ff8080 !important; 
         }
         /* Pastikan dropdown-content muncul di sebelah kanan agar tidak terpotong layar */
@@ -285,11 +291,14 @@
             </div>
 
             <div class="options-container" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start;">
-                <div class="opt" data-user="anwar"><span class="dot bg-anwar"></span> ANWAR</div>
-                <div class="opt" data-user="kezia"><span class="dot bg-kezia"></span> KEZIA</div>
-                <div class="opt" data-user="alfrian"><span class="dot bg-alfrian"></span> ALFRIAN</div>
-                <div class="opt" data-user="grazica"><span class="dot bg-grazica"></span> GRAZICA</div>
-                <div class="opt" data-user="mulya"><span class="dot bg-mulya"></span> MULYA</div>
+                <div class="opt" data-user="rizky"><span class="dot bg-rizky"></span> RIZKY</div>
+                <div class="opt" data-user="farhan"><span class="dot bg-farhan"></span> FARHAN</div>
+                <div class="opt" data-user="krisna"><span class="dot bg-krisna"></span> KRISNA</div>
+                <div class="opt" data-user="putri"><span class="dot bg-putri"></span> PUTRI</div>
+                <div class="opt" data-user="siliya"><span class="dot bg-siliya"></span> SILIYA</div>
+                <div class="opt" data-user="taufiq"><span class="dot bg-taufiq"></span> TAUFIQ</div>
+                <div class="opt" data-user="aprilia"><span class="dot bg-aprilia"></span> APRILIA</div>
+                
                 <div class="opt btn-delete" data-user="none">✕ Hapus</div>
             </div>
         </div>
@@ -340,8 +349,8 @@
             "2026-08-25": "Maulid Nabi Muhammad",
             "2026-12-25": "Christmas Day"
         };
-        const users = ["anwar", "kezia", "alfrian", "grazica", "mulya"];
-        let selectedUser = "anwar";
+        const users = ["rizky", "farhan", "krisna", "putri", "siliya", "taufiq", "aprilia"];
+        let selectedUser = "";
         let allData = {};
 
         function switchView(viewId) {
