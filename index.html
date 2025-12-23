@@ -18,8 +18,8 @@
             --accent-hover: #dbeafe;
             
             /* Warna Karyawan Tetap Sesuai Identitas */
-            --anwar: #6d1b31; 
-            --kezia: #a020f0; 
+            --anwar: #a16e7b; 
+            --kezia: #f020df; 
             --alfrian: #eab308; /* Yellow Gold */
             --grazica: #f97316; /* Orange */
             --mulya: #06b6d4;   /* Cyan */
@@ -27,6 +27,7 @@
 
         body { 
             font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+            padding-top: 80px;
             margin: 0; 
             background: var(--bg-body); 
             color: var(--text-main);
@@ -211,25 +212,84 @@
         .bg-kezia .holiday-label {
             color: #ff8080 !important; 
         }
+        /* Pastikan dropdown-content muncul di sebelah kanan agar tidak terpotong layar */
+       /* Pastikan konten dropdown berada di depan kalender */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0; 
+            top: 50px; /* Jarak dari atas tombol */
+            background-color: white;
+            min-width: 180px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            z-index: 9999; /* Sangat tinggi agar tidak tertutup kalender */
+            overflow: hidden;
+        }
+
+        /* Class untuk memunculkan menu */
+        .show { 
+            display: block !important; 
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            color: #334155;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background-color: #f8fafc;
+        }
+        /* Menargetkan hanya judul di dalam area manajemen libur */
+        .employee-selector h3 {
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+            color: #1e293b; /* Warna biru gelap agar elegan */
+            font-size: 1.2rem;
+}
     </style>
 </head>
 <body>
+    <nav style="display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; background: #1e293b; height: 60px; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;">
+        <div style="color: white; font-weight: bold; margin-right: auto;">JADWAL LIBUR 2026</div>
 
-    <nav>
-        <div class="nav-item active" onclick="switchView('control-view')">PENJADWALAN</div>
-        <div class="nav-item" onclick="switchView('dashboard-view')">DASHBOARD LAPORAN</div>
+        <div class="dropdown" style="position: relative;">
+            <div class="dropbtn" onclick="toggleDropdown()" style="color: white; font-size: 28px; cursor: pointer; padding: 10px; line-height: 1; user-select: none;">
+                &#8942;
+            </div>
+            
+            <div id="myDropdown" class="dropdown-content">
+                <div class="nav-item" id="nav-control" onclick="switchView('control-view')">PENJADWALAN</div>
+                <div class="nav-item" id="nav-dashboard" onclick="switchView('dashboard-view')">DASHBOARD LAPORAN</div>
+            </div>
+        </div>
     </nav>
 
     <div id="control-view" class="view active">
-        <div class="header-panel">
+         
+        <div class="employee-selector" style="padding: 20px; background: white; border-radius: 12px;">
+    
             <h3>Manajemen Libur Karyawan</h3>
-            <div class="employee-list-horizontal">
-                <div class="opt active" data-user="anwar"><span class="dot" style="background:var(--anwar)"></span> ANWAR</div>
-                <div class="opt" data-user="kezia"><span class="dot" style="background:var(--kezia)"></span> KEZIA</div>
-                <div class="opt" data-user="alfrian"><span class="dot" style="background:var(--alfrian)"></span> ALFRIAN</div>
-                <div class="opt" data-user="grazica"><span class="dot" style="background:var(--grazica)"></span> GRAZICA</div>
-                <div class="opt" data-user="mulya"><span class="dot" style="background:var(--mulya)"></span> MULYA</div>
-                <div class="opt" data-user="none" style="border-style: dashed;">✕ Hapus</div>
+
+            <div class="instructions" style="text-align: left; background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 13px; color: #475569;">
+                    <strong>💡 Cara Penggunaan:</strong><br>
+                    1. Klik <strong>Nama Karyawan</strong> lalu klik <strong>Tanggal</strong> pada kalender untuk mengisi jadwal.<br>
+                    2. Klik tombol <strong>Hapus</strong> lalu klik <strong>Tanggal</strong> untuk membatalkan jadwal.
+                </p>
+            </div>
+
+            <div class="options-container" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start;">
+                <div class="opt" data-user="anwar"><span class="dot bg-anwar"></span> ANWAR</div>
+                <div class="opt" data-user="kezia"><span class="dot bg-kezia"></span> KEZIA</div>
+                <div class="opt" data-user="alfrian"><span class="dot bg-alfrian"></span> ALFRIAN</div>
+                <div class="opt" data-user="grazica"><span class="dot bg-grazica"></span> GRAZICA</div>
+                <div class="opt" data-user="mulya"><span class="dot bg-mulya"></span> MULYA</div>
+                <div class="opt btn-delete" data-user="none">✕ Hapus</div>
             </div>
         </div>
         <div class="calendar-grid" id="calendar-container"></div>
@@ -429,7 +489,42 @@
             });
         }
         init();
-        
+        // Fungsi untuk membuka/menutup dropdown
+        function toggleDropdown() {
+            const dropdown = document.getElementById("myDropdown");
+            dropdown.classList.toggle("show");
+        }
+
+        // Menutup dropdown jika user mengklik area lain di layar
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                const dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        // Fungsi switchView yang sudah disempurnakan
+        function switchView(viewId) {
+            // Sembunyikan semua tampilan
+            document.getElementById('control-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'none';
+            
+            // Tampilkan tampilan yang dipilih
+            document.getElementById(viewId).style.display = 'block';
+            
+            // Jika ke dashboard, update datanya
+            if (viewId === 'dashboard-view') {
+                updateDashboard();
+            }
+            
+            // Tutup kembali dropdown setelah memilih
+            document.getElementById("myDropdown").classList.remove("show");
+        }
     </script>
 </body>
 </html>
