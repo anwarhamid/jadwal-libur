@@ -70,6 +70,9 @@ nav div.active {
 }
 .header-panel h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #1e293b; }
 
+/* Spacing between the employee selector panel and the calendar */
+.employee-selector { margin-bottom: 32px; }
+
 .employee-list-horizontal { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 
 .opt { 
@@ -92,7 +95,7 @@ nav div.active {
 .calendar-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-    gap: 25px; 
+    gap: 40px; /* increased spacing between month panels */
 }
 .month-box { 
     background: var(--card-bg); 
@@ -105,7 +108,7 @@ nav div.active {
     background: #f8fafc; 
     color: #1e293b; 
     text-align: center; 
-    padding: 15px 20px; 
+    padding: 20px 24px; /* more breathing room for the month header */
     font-weight: 700; 
     border-bottom: 1px solid #e2e8f0;
     font-size: 16px;
