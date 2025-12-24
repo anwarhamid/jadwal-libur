@@ -44,6 +44,8 @@ const YEAR = 2026;
 const MAX_PER_MONTH = 5;
 const VALID_USERS = new Set([...users, 'none']);
 let firebaseConnected = false;
+// Keep logs only for this many days (remote + local)
+const LOG_RETENTION_DAYS = 15;
 
 // --- Logging helpers (defined early so calls from init won't ReferenceError) ---
 let localLogs = [];
@@ -53,6 +55,39 @@ function loadLogs() {
         const raw = localStorage.getItem('jadwal_logs');
         if (raw) localLogs = JSON.parse(raw) || [];
     } catch (e) { localLogs = []; }
+    // Prune local logs older than retention window
+    try { pruneLocalLogs(); } catch(e) { /* ignore */ }
+}
+
+// Remove local logs older than retention window and persist
+function pruneLocalLogs() {
+    const now = Date.now();
+    const cutoff = now - (LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+    const before = localLogs.length;
+    localLogs = (localLogs || []).filter(l => (l && l.ts && l.ts >= cutoff) || !l.ts );
+    if (localLogs.length !== before) {
+        try { localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){}
+    }
+}
+
+// Prune remote Firebase logs older than retention window (destructive)
+function pruneOldLogsRemote() {
+    if (!db) return Promise.resolve();
+    const cutoff = Date.now() - (LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+    return db.ref('audit/logs').once('value').then(snap => {
+        const val = snap.val();
+        if (!val) return;
+        const removes = [];
+        Object.keys(val).forEach(k => {
+            const entry = val[k];
+            if (!entry) return;
+            if (entry.ts && entry.ts < cutoff) {
+                removes.push(k);
+            }
+        });
+        // perform removals sequentially to avoid overloading
+        return removes.reduce((p, key) => p.then(() => db.ref('audit/logs/' + key).remove().catch(e => { console.warn('prune remove failed', e); })), Promise.resolve());
+    }).catch(e => { console.warn('pruneOldLogsRemote failed', e); });
 }
 
 // Toast helper (non-blocking notifications)
@@ -84,8 +119,10 @@ function retryPendingLog(logEntry) {
                 localStorage.setItem('jadwal_logs', JSON.stringify(localLogs));
             }
         } catch (e) { console.warn('retryPendingLog update failed', e); }
+        // attempt pruning remote logs after successful retry
+        try { pruneOldLogsRemote(); } catch(e) { console.warn('prune after retry failed', e); }
         showToast('Log berhasil dikirim ke server', 'success');
-        try { renderLogs(); } catch(e){}
+        try { pruneLocalLogs(); renderLogs(); } catch(e){}
     }).catch(err => {
         console.warn('retryPendingLog failed', err);
         showToast('Gagal mengirim log. Coba lagi nanti.', 'error');
@@ -184,10 +221,14 @@ function addLogEntry(dateId, action, subject, meta) {
         localStorage.setItem('jadwal_logs', JSON.stringify(localLogs));
     } catch (e) { console.warn('addLogEntry local save failed', e); }
     if (db) {
-        writeFirebasePush('audit/logs', entry).catch(() => { try { localLogs[0].pending = true; localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){} });
+        writeFirebasePush('audit/logs', entry).then(() => {
+            // After pushing, attempt remote pruning to enforce retention
+            try { pruneOldLogsRemote(); } catch(e) { console.warn('prune after push failed', e); }
+        }).catch(() => { try { localLogs[0].pending = true; localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){} });
     }
     try { renderLogs(); } catch(e){}
 }
+
 
 // Monitor Realtime Database connection status ('.info/connected')
 function monitorFirebaseConnection() {
@@ -859,15 +900,17 @@ function init() {
         db.ref('audit/logs').limitToLast(200).on('value', (snap) => {
             const val = snap.val();
             if (!val) return;
-            const remote = Object.values(val);
+            const cutoff = Date.now() - (LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+            // Only consider remote entries within retention window
+            const remoteAll = Object.entries(val || {}).map(([k,v]) => v).filter(r => r && r.ts && r.ts >= cutoff);
             // merge remote into localLogs without duplicates
             const map = {};
             localLogs.forEach(l => { const k = `${l.ts}|${l.action}|${l.subject}`; map[k]=l; });
-            remote.forEach(r => { const k = `${r.ts}|${r.action}|${r.subject}`; if (!map[k]) map[k]=r; });
-            // build array sorted by ts desc
+            remoteAll.forEach(r => { const k = `${r.ts}|${r.action}|${r.subject}`; if (!map[k]) map[k]=r; });
+            // build array sorted by ts desc and enforce size limit
             const merged = Object.values(map).sort((a,b)=>b.ts - a.ts).slice(0,500);
             localLogs = merged;
-            try { localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){}
+            try { pruneLocalLogs(); localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){}
             renderLogs();
         });
     } catch(e){ console.warn('audit logs listener failed', e); }
@@ -914,6 +957,8 @@ function init() {
             } catch(e){}
         }
     });
+    // Run one-time remote pruning to enforce retention policy
+    try { pruneOldLogsRemote(); } catch(e){ console.warn('initial prune failed', e); }
 }
 init();
 // Fungsi untuk membuka/menutup dropdown
@@ -973,8 +1018,8 @@ function switchView(viewId) {
         } catch (e) { /* ignore */ }
 }
 // BLOKIR DEVTOOLS ATAU F12
-setInterval(function() {
-    if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
-        document.body.innerHTML = "<h1>Akses Ditolak! Tolong jangan mengintip kode.</h1>";
-    }
-}, 1000);
+// setInterval(function() {
+//    if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+//         document.body.innerHTML = "<h1>Akses Ditolak! Tolong jangan mengintip kode.</h1>";
+//     }
+// }, 1000);
