@@ -1,0 +1,332 @@
+:root {
+    /* Palet Warna Profesional */
+    --bg-body: #f0f2f5;
+    --nav-bg: #1e293b; /* Slate Dark */
+    --card-bg: #ffffff;
+    --text-main: #334155;
+    --primary: #3b82f6; /* Blue Accent */
+    --accent-hover: #dbeafe;
+    
+    /* Warna Karyawan Tetap Sesuai Identitas */
+    --rizky: #ffc0cb; 
+    --farhan: #99727c; 
+    --krisna: #eab308; /* Yellow Gold */
+    --putri: #f19d60; /* Orange */
+    --siliya: #70cada;   /* Cyan */
+    --taufiq: #82f160; /* Orange */
+    --aprilia: #9b72ca;   /* Cyan */
+}
+
+body { 
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+    padding-top: 80px;
+    margin: 0; 
+    background: var(--bg-body); 
+    color: var(--text-main);
+}
+
+/* Navigation yang Lebih Rapi */
+nav { 
+    background: var(--nav-bg); 
+    color: white; 
+    display: flex; 
+    padding: 0 40px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+nav div { 
+    padding: 18px 25px; 
+    cursor: pointer; 
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    border-bottom: 4px solid transparent;
+    opacity: 0.8;
+}
+nav div:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+nav div.active { 
+    opacity: 1; 
+    border-bottom: 4px solid var(--primary); 
+    background: rgba(255,255,255,0.1); 
+}
+
+.view { display: none; padding: 30px; max-width: 1400px; margin: 0 auto; }
+.view.active { display: block; animation: fadeIn 0.4s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Panel Kontrol Horizontal */
+.header-panel { 
+    background: var(--card-bg); 
+    padding: 25px; 
+    border-radius: 16px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
+    margin-bottom: 30px;
+    border: 1px solid #e2e8f0;
+}
+.header-panel h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #1e293b; }
+
+.employee-list-horizontal { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.opt { 
+    display: flex; align-items: center; padding: 10px 20px; 
+    border-radius: 12px; cursor: pointer; border: 1.5px solid #f1f5f9; 
+    background: #fff; font-size: 14px; font-weight: 600; 
+    transition: all 0.2s ease;
+    color: #64748b;
+}
+.opt:hover { background: var(--accent-hover); border-color: var(--primary); }
+.opt.active { 
+    border-color: var(--primary); 
+    background: var(--accent-hover); 
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+.dot { width: 14px; height: 14px; border-radius: 4px; margin-right: 10px; }
+
+/* Kalender Grid Responsif */
+.calendar-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+    gap: 25px; 
+}
+.month-box { 
+    background: var(--card-bg); 
+    border-radius: 16px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 1px solid #e2e8f0;
+}
+.month-title { 
+    background: #f8fafc; 
+    color: #1e293b; 
+    text-align: center; 
+    padding: 15px 20px; 
+    font-weight: 700; 
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 16px;
+}
+.days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.day-lbl { 
+    color: #94a3b8; 
+    font-size: 11px; 
+    padding: 12px 0; 
+    font-weight: 800; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+/* Sel Tanggal */
+.day { 
+    aspect-ratio: 1/1; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; 
+    border: 0.5px solid #f1f5f9; cursor: pointer; 
+    transition: background 0.2s;
+}
+.day:hover { background: #f8fafc; }
+.day span.date-num { font-size: 15px; font-weight: 500; }
+.day span.emp-name { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 4px; opacity: 0.9; }
+
+/* Warna Background dengan Text Kontras */
+.bg-rizky { background: var(--rizky) !important; color: white; }
+.bg-farhan { background: var(--farhan) !important; color: white; }
+.bg-krisna { background: var(--krisna) !important; color: #422006; }
+.bg-putri { background: var(--putri) !important; color: white; }
+.bg-siliya { background: var(--siliya) !important; color: #083344; }
+.bg-taufiq { background: var(--taufiq) !important; color: white; }
+.bg-aprilia { background: var(--aprilia) !important; color: #083344; }
+
+/* Dashboard */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+.stat-card { 
+    background: white; padding: 25px; border-radius: 16px; 
+    text-align: center; border-left: 6px solid #ddd;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.stat-card h4 { color: #64748b; margin: 0 0 10px 0; font-size: 13px; letter-spacing: 1px; }
+.stat-card .count { font-size: 32px; font-weight: 800; color: #1e293b; }
+
+@media (max-width: 768px) { nav { padding: 0 10px; } .view { padding: 15px; } }
+/* Menambahkan indikator visual kecil di bawah angka untuk libur nasional */
+.day[title] .date-num::after {
+    content: '•';
+    display: block;
+    font-size: 10px;
+    line-height: 0;
+}
+/* Container untuk menampung label di bawah angka */
+.label-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2px;
+}
+
+/* Style khusus untuk label libur nasional */
+.holiday-label {
+    font-size: 6px;
+    color: red !important; /* Memaksa tetap merah */
+    font-weight: bold;
+    line-height: 1.1;
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+/* Style khusus untuk label nama karyawan */
+.user-label {
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    color: inherit; /* Mengikuti warna teks utama dari class bg-xxx */
+}
+
+/* Pastikan warna teks label nama tetap putih pada background gelap */
+.bg-rizky .user-label, 
+.bg-farhan .user-label, 
+.bg-krisna .user-label, 
+.bg-putri .user-label,
+.bg-siliya .user-label {
+    color: white !important;
+}
+
+/* Pastikan warna teks label nama tetap hitam pada background terang */
+.bg-taufiq .user-label, 
+.bg-aprilia .user-label {
+    color: black !important;
+}
+
+/* Tambahan: Jika tanggal libur ada di background gelap, 
+buat label liburnya sedikit lebih terang agar tetap terbaca */
+.bg-rizky .holiday-label, 
+.bg-farhan .holiday-label {
+    color: #ff8080 !important; 
+}
+/* Pastikan dropdown-content muncul di sebelah kanan agar tidak terpotong layar */
+/* Pastikan konten dropdown berada di depan kalender */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0; 
+    top: 50px; /* Jarak dari atas tombol */
+    background-color: white;
+    min-width: 180px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    z-index: 9999; /* Sangat tinggi agar tidak tertutup kalender */
+    overflow: hidden;
+}
+
+/* Class untuk memunculkan menu */
+.show { 
+    display: block !important; 
+}
+
+.nav-item {
+    padding: 12px 16px;
+    color: #334155;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+.nav-item:hover {
+    background-color: #f8fafc;
+}
+/* Menargetkan hanya judul di dalam area manajemen libur */
+.employee-selector h3 {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    color: #1e293b; /* Warna biru gelap agar elegan */
+    font-size: 1.2rem;
+}
+
+/* Settings panel for adding users */
+.settings-panel {
+    margin-top: 18px;
+    background: #fff;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+.settings-panel h4 { margin: 0 0 8px 0; font-size: 15px; }
+.settings-row { display:flex; gap:8px; align-items:center; }
+.settings-row input[type="text"], .settings-row input[type="color"], .settings-row input {
+    padding: 8px 10px; border-radius: 8px; border: 1px solid #e6eef8; background: #fff; font-size: 13px;
+}
+.settings-row button { padding: 8px 14px; border-radius: 8px; background: var(--primary); color: #fff; border: none; cursor: pointer; font-weight:700 }
+.settings-row button:hover { opacity: 0.95 }
+
+/* User list inside settings */
+#user-list { margin-top: 10px; display: grid; gap: 8px; }
+.user-item { display:flex; align-items:center; justify-content: space-between; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e6eef8 }
+.user-item .left { display:flex; align-items:center; gap:8px }
+.user-item .dot { width:16px; height:16px; border-radius:4px }
+.user-item .actions button { margin-left:8px; padding:6px 8px; border-radius:6px; border: none; cursor:pointer }
+.user-item .actions .edit { background:#fff; border:1px solid #f1f5f9 }
+.user-item .actions .del { background:#ff4242; color:#fff }
+.contrast-warn { color:#b45309; font-size:12px; margin-top:6px }
+
+/* Settings drawer (off-canvas) */
+.settings-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 9998; transition: opacity 200ms ease;
+}
+.settings-drawer {
+    /* Full-screen modal overlay (responsive) */
+    position: fixed; inset: 0; width: 100%; height: 100%; background: #fff; z-index: 9999;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    /* Start off-screen (slide from bottom) for a mobile-friendly feel */
+    transform: translateY(100%);
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+}
+.settings-drawer[aria-hidden="false"] { transform: translateY(0%); opacity: 1; }
+.settings-drawer-inner { height: 100%; display:flex; flex-direction:column; overflow: auto; }
+
+/* Large screens: present modal as centered panel with max width */
+@media (min-width: 900px) {
+    .settings-drawer { align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
+    .settings-drawer-inner { background: #fff; width: 720px; max-width: calc(100% - 40px); height: auto; max-height: 90%; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); overflow: auto; }
+}
+
+/* Place close button fixed to top-right for easier access */
+.settings-drawer header button#close-settings-btn {
+    position: absolute; right: 12px; top: 12px; z-index: 3;
+}
+
+/* Firebase status indicator in navbar */
+#firebase-status.firebase-status { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; box-shadow: 0 0 0 3px rgba(255,255,255,0.02) inset; }
+#firebase-status.online { background: #22c55e; }
+#firebase-status.offline { background: #f97316; }
+#firebase-status[title] { cursor: default; }
+
+/* Logs list */
+#logs-container { display: flex; flex-direction: column; gap: 8px; }
+.log-item { background: #f8fafc; border: 1px solid #e6eef8; padding: 10px 12px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center }
+.log-item .left { display:flex; gap:8px; align-items:center }
+.log-item .time { color:#94a3b8; font-size:12px }
+.log-item .msg { color:#334155; font-size:14px }
+.log-item .action { font-weight:700; color:#0f172a; font-size:13px; padding:6px 8px; border-radius:6px; background:#fff; border:1px solid #e2e8f0 }
+
+@media (max-width: 700px) { #logs-container { max-height: 240px; } }
+/* Toast notifications */
+#toast-container { position: fixed; right: 18px; bottom: 18px; display:flex; flex-direction:column; gap:8px; z-index:11000; }
+.toast { min-width: 200px; max-width: 360px; background: #0f172a; color: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 22px rgba(2,6,23,0.4); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.toast .tmsg { flex:1; font-size:13px }
+.toast .tclose { margin-left: 8px; cursor:pointer; opacity:0.8; border:none; background:transparent; color:inherit; font-weight:700 }
+.toast.info { background: #0ea5e9 }
+.toast.success { background: #16a34a }
+.toast.warning { background: #f59e0b }
+.toast.error { background: #ef4444 }
+/* Retry button inside logs */
+.btn-retry { padding:6px 8px; border-radius:6px; border:none; background:#2563eb; color:#fff; cursor:pointer; margin-left:8px }
+.btn-retry:hover { opacity:0.95 }

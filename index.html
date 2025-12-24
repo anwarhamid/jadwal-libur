@@ -7,263 +7,14 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔵</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <style>
-        :root {
-            /* Palet Warna Profesional */
-            --bg-body: #f0f2f5;
-            --nav-bg: #1e293b; /* Slate Dark */
-            --card-bg: #ffffff;
-            --text-main: #334155;
-            --primary: #3b82f6; /* Blue Accent */
-            --accent-hover: #dbeafe;
-            
-            /* Warna Karyawan Tetap Sesuai Identitas */
-            --rizky: #99727c; 
-            --farhan: #ffc0cb; 
-            --krisna: #eab308; /* Yellow Gold */
-            --putri: #f19d60; /* Orange */
-            --siliya: #70cada;   /* Cyan */
-            --taufiq: #82f160; /* Orange */
-            --aprilia: #a270da;   /* Cyan */
-        }
-
-        body { 
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
-            padding-top: 80px;
-            margin: 0; 
-            background: var(--bg-body); 
-            color: var(--text-main);
-        }
-
-        /* Navigation yang Lebih Rapi */
-        nav { 
-            background: var(--nav-bg); 
-            color: white; 
-            display: flex; 
-            padding: 0 40px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        nav div { 
-            padding: 18px 25px; 
-            cursor: pointer; 
-            font-weight: 500;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            border-bottom: 4px solid transparent;
-            opacity: 0.8;
-        }
-        nav div:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-        nav div.active { 
-            opacity: 1; 
-            border-bottom: 4px solid var(--primary); 
-            background: rgba(255,255,255,0.1); 
-        }
-
-        .view { display: none; padding: 30px; max-width: 1400px; margin: 0 auto; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Panel Kontrol Horizontal */
-        .header-panel { 
-            background: var(--card-bg); 
-            padding: 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
-            margin-bottom: 30px;
-            border: 1px solid #e2e8f0;
-        }
-        .header-panel h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #1e293b; }
-        
-        .employee-list-horizontal { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-
-        .opt { 
-            display: flex; align-items: center; padding: 10px 20px; 
-            border-radius: 12px; cursor: pointer; border: 1.5px solid #f1f5f9; 
-            background: #fff; font-size: 14px; font-weight: 600; 
-            transition: all 0.2s ease;
-            color: #64748b;
-        }
-        .opt:hover { background: var(--accent-hover); border-color: var(--primary); }
-        .opt.active { 
-            border-color: var(--primary); 
-            background: var(--accent-hover); 
-            color: var(--primary);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-        }
-        .dot { width: 14px; height: 14px; border-radius: 4px; margin-right: 10px; }
-        
-        /* Kalender Grid Responsif */
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-            gap: 25px; 
-        }
-        .month-box { 
-            background: var(--card-bg); 
-            border-radius: 16px; 
-            overflow: hidden; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            border: 1px solid #e2e8f0;
-        }
-        .month-title { 
-            background: #f8fafc; 
-            color: #1e293b; 
-            text-align: center; 
-            padding: 15px 20px; 
-            font-weight: 700; 
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 16px;
-        }
-        .days { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .day-lbl { 
-            color: #94a3b8; 
-            font-size: 11px; 
-            padding: 12px 0; 
-            font-weight: 800; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-        
-        /* Sel Tanggal */
-        .day { 
-            aspect-ratio: 1/1; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            border: 0.5px solid #f1f5f9; cursor: pointer; 
-            transition: background 0.2s;
-        }
-        .day:hover { background: #f8fafc; }
-        .day span.date-num { font-size: 15px; font-weight: 500; }
-        .day span.emp-name { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 4px; opacity: 0.9; }
-        
-        /* Warna Background dengan Text Kontras */
-        .bg-rizky { background: var(--rizky) !important; color: white; }
-        .bg-farhan { background: var(--farhan) !important; color: white; }
-        .bg-krisna { background: var(--krisna) !important; color: #422006; }
-        .bg-putri { background: var(--putri) !important; color: white; }
-        .bg-siliya { background: var(--siliya) !important; color: #083344; }
-        .bg-taufiq { background: var(--taufiq) !important; color: white; }
-        .bg-aprilia { background: var(--aprilia) !important; color: #083344; }
-
-        /* Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
-        .stat-card { 
-            background: white; padding: 25px; border-radius: 16px; 
-            text-align: center; border-left: 6px solid #ddd;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        }
-        .stat-card h4 { color: #64748b; margin: 0 0 10px 0; font-size: 13px; letter-spacing: 1px; }
-        .stat-card .count { font-size: 32px; font-weight: 800; color: #1e293b; }
-
-        @media (max-width: 768px) { nav { padding: 0 10px; } .view { padding: 15px; } }
-        /* Menambahkan indikator visual kecil di bawah angka untuk libur nasional */
-        .day[title] .date-num::after {
-            content: '•';
-            display: block;
-            font-size: 10px;
-            line-height: 0;
-        }
-        /* Container untuk menampung label di bawah angka */
-        .label-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-top: 2px;
-        }
-
-        /* Style khusus untuk label libur nasional */
-        .holiday-label {
-            font-size: 6px;
-            color: red !important; /* Memaksa tetap merah */
-            font-weight: bold;
-            line-height: 1.1;
-            text-align: center;
-            margin-bottom: 2px;
-        }
-
-        /* Style khusus untuk label nama karyawan */
-        .user-label {
-            font-size: 8px;
-            font-weight: 800;
-            line-height: 1;
-            text-align: center;
-            color: inherit; /* Mengikuti warna teks utama dari class bg-xxx */
-        }
-
-        /* Pastikan warna teks label nama tetap putih pada background gelap */
-        .bg-rizky .user-label, 
-        .bg-farhan .user-label, 
-        .bg-krisna .user-label, 
-        .bg-putri .user-label,
-        .bg-siliya .user-label {
-            color: white !important;
-        }
-
-        /* Pastikan warna teks label nama tetap hitam pada background terang */
-        .bg-taufiq .user-label, 
-        .bg-aprilia .user-label {
-            color: black !important;
-        }
-
-        /* Tambahan: Jika tanggal libur ada di background gelap, 
-        buat label liburnya sedikit lebih terang agar tetap terbaca */
-        .bg-rizky .holiday-label, 
-        .bg-farhan .holiday-label {
-            color: #ff8080 !important; 
-        }
-        /* Pastikan dropdown-content muncul di sebelah kanan agar tidak terpotong layar */
-       /* Pastikan konten dropdown berada di depan kalender */
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0; 
-            top: 50px; /* Jarak dari atas tombol */
-            background-color: white;
-            min-width: 180px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            z-index: 9999; /* Sangat tinggi agar tidak tertutup kalender */
-            overflow: hidden;
-        }
-
-        /* Class untuk memunculkan menu */
-        .show { 
-            display: block !important; 
-        }
-
-        .nav-item {
-            padding: 12px 16px;
-            color: #334155;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 14px;
-        }
-
-        .nav-item:hover {
-            background-color: #f8fafc;
-        }
-        /* Menargetkan hanya judul di dalam area manajemen libur */
-        .employee-selector h3 {
-            text-align: center;
-            width: 100%;
-            margin-bottom: 20px;
-            color: #1e293b; /* Warna biru gelap agar elegan */
-            font-size: 1.2rem;
-}
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <nav style="display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; background: #1e293b; height: 60px; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;">
-        <div style="color: white; font-weight: bold; margin-right: auto;">JADWAL LIBUR 2026</div>
-
+        <div style="color: white; font-weight: bold; margin-right: auto; display:flex; align-items:center; gap:10px;">
+            <span id="site-title" role="button" tabindex="0" title="Buka Penjadwalan" style="cursor:pointer">JADWAL LIBUR 2026</span>
+            <span id="firebase-status" title="Firebase connection" class="firebase-status offline" aria-hidden="false"></span>
+        </div>
         <div class="dropdown" style="position: relative;">
             <div class="dropbtn" onclick="toggleDropdown()" style="color: white; font-size: 28px; cursor: pointer; padding: 10px; line-height: 1; user-select: none;">
                 &#8942;
@@ -272,6 +23,7 @@
             <div id="myDropdown" class="dropdown-content">
                 <div class="nav-item" id="nav-control" onclick="switchView('control-view')">PENJADWALAN</div>
                 <div class="nav-item" id="nav-dashboard" onclick="switchView('dashboard-view')">DASHBOARD LAPORAN</div>
+                <div class="nav-item" id="open-settings-btn">PENGATURAN</div>
             </div>
         </div>
     </nav>
@@ -281,6 +33,7 @@
         <div class="employee-selector" style="padding: 20px; background: white; border-radius: 12px;">
     
             <h3>Manajemen Libur Karyawan</h3>
+            <h3>PT. Aplikasi Kreasi Asia</h3>
 
             <div class="instructions" style="text-align: left; background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
                 <p style="margin: 0; font-size: 13px; color: #475569;">
@@ -301,6 +54,7 @@
                 
                 <div class="opt btn-delete" data-user="none">✕ Hapus</div>
             </div>
+            
         </div>
         <div class="calendar-grid" id="calendar-container"></div>
     </div>
@@ -311,230 +65,69 @@
             <select id="filter-month" onchange="updateDashboard()" style="padding:10px 15px; border-radius:8px; border: 1px solid #e2e8f0; font-weight: 600;"></select>
         </div>
         <div class="stats-grid" id="stats-container"></div>
+        <!-- Activity logs / riwayat perubahan -->
+        <section id="logs-section" style="margin-top: 24px;">
+            <div style="background:#fff; padding:18px; border-radius:12px; border:1px solid #e6eef8;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="margin:0; font-size:16px;">Riwayat Perubahan</h3>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select id="log-filter-user" style="padding:6px 8px; border-radius:8px; border:1px solid #e6eef8;">
+                            <option value="">Semua Karyawan</option>
+                        </select>
+                        <select id="log-filter-type" style="padding:6px 8px; border-radius:8px; border:1px solid #e6eef8;">
+                            <option value="">Semua Tipe</option>
+                            <option value="set">Assign</option>
+                            <option value="remove">Hapus</option>
+                            <option value="user:add">Tambah User</option>
+                            <option value="user:edit">Edit User</option>
+                            <option value="user:delete">Hapus User</option>
+                        </select>
+                        <select id="log-filter-time" style="padding:6px 8px; border-radius:8px; border:1px solid #e6eef8;">
+                            <option value="">Semua Waktu</option>
+                            <option value="today">Hari Ini</option>
+                            <option value="last7">7 Hari Terakhir</option>
+                            <option value="last30">30 Hari Terakhir</option>
+                            <option value="custom">Kustom...</option>
+                        </select>
+                        <input id="log-filter-start" type="date" style="display:none; padding:6px 8px; border-radius:8px; border:1px solid #e6eef8; margin-left:6px;" />
+                        <input id="log-filter-end" type="date" style="display:none; padding:6px 8px; border-radius:8px; border:1px solid #e6eef8; margin-left:6px;" />
+                    </div>
+                </div>
+                <div id="logs-container" style="max-height:320px; overflow:auto;"></div>
+            </div>
+        </section>
+
+        <!-- Settings drawer is available via the gear button in the navbar -->
     </div>
 
-    <script>
-        // ISI CONFIG FIREBASE ANDA DI SINI
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlzi3Egf-L9Fz0tE-YZLDDtAEWs97cAW4",
-            authDomain: "jadwal-libur-f38db.firebaseapp.com",
-            databaseURL: "https://jadwal-libur-f38db-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "jadwal-libur-f38db",
-            storageBucket: "jadwal-libur-f38db.firebasestorage.app",
-            messagingSenderId: "123733774698",
-            appId: "1:123733774698:web:e3bf19d569d8831d7fd513",
-            measurementId: "G-H3W268K4HG"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+    <!-- Settings drawer (off-canvas) -->
+    <div id="settings-overlay" class="settings-overlay" style="display:none"></div>
+    <aside id="settings-drawer" class="settings-drawer" aria-hidden="true">
+        <div class="settings-drawer-inner">
+            <header style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eef2f7;">
+                <strong>Pengaturan Karyawan</strong>
+                <button id="close-settings-btn" style="background:transparent;border:none;font-size:18px;cursor:pointer">✕</button>
+            </header>
+            <div style="padding:16px;">
+                <div class="settings-panel">
+                    <h4>Tambah / Edit Karyawan</h4>
+                    <div class="settings-row">
+                        <input id="new-user-name" placeholder="Nama (tanpa spasi, contoh: anwar)" />
+                        <input id="new-user-label" placeholder="Label tampil (contoh: ANWAR)" />
+                        <input id="new-user-color" type="color" value="#6b7280" title="Pilih warna" />
+                        <button id="add-user-btn">Tambah</button>
+                        <button id="cancel-edit-btn" style="display:none; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; margin-left:6px">Batal</button>
+                    </div>
+                    <small style="color:#64748b; display:block; margin-top:8px;">Nama digunakan untuk data (lowercase, tanpa spasi). Label akan tampil pada kalender.</small>
+                </div>
 
-        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        // Tambahkan data libur nasional 2026
-        const nationalHolidays = {
-            "2026-01-01": "New Year's Day",
-            "2026-01-16": "Ascension of the Prophet Muhammad",
-            "2026-02-17": "Chinese New Year's Day",
-            "2026-03-19": "Nyepi (Hindu New Year)",
-            "2026-03-20": "Idul Fitri Day 1",
-            "2026-03-21": "Idul Fitri Day 2",
-            "2026-04-03": "Good Friday",
-            "2026-04-05": "Easter Sunday",
-            "2026-05-01": "International Labor Day",
-            "2026-05-14": "Ascension Day of Jesus Christ",
-            "2026-05-27": "Idul Adha",
-            "2026-05-31": "Waisak Day",
-            "2026-06-01": "Pancasila Day",
-            "2026-06-16": "Islamic New Year",
-            "2026-08-17": "Indonesian Independence Day",
-            "2026-08-25": "Maulid Nabi Muhammad",
-            "2026-12-25": "Christmas Day"
-        };
-        const users = ["rizky", "farhan", "krisna", "putri", "siliya", "taufiq", "aprilia"];
-        let selectedUser = "";
-        let allData = {};
-
-        function switchView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            if(viewId === 'dashboard-view') updateDashboard();
-        }
-
-        function renderCalendar() {
-            const container = document.getElementById('calendar-container');
-            container.innerHTML = '';
-            for (let m = 0; m < 12; m++) {
-                const box = document.createElement('div');
-                box.className = 'month-box';
-                box.innerHTML = `<div class="month-title">${months[m]} 2026</div>`;
-                const daysDiv = document.createElement('div');
-                daysDiv.className = 'days';
-                ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].forEach(d => daysDiv.innerHTML += `<div class="day-lbl">${d}</div>`);
-                const firstDay = new Date(2026, m, 1).getDay();
-                const totalDays = new Date(2026, m + 1, 0).getDate();
-                for (let i = 0; i < firstDay; i++) daysDiv.innerHTML += `<div class="day empty"></div>`;
-                for (let d = 1; d <= totalDays; d++) {
-                    const dateId = `2026-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const dayEl = document.createElement('div');
-                    dayEl.className = 'day';
-                    
-                    const userData = allData[dateId];
-                    const holidayName = nationalHolidays[dateId]; 
-
-                    // A. Atur Background jika dipilih karyawan
-                    if (userData) {
-                        dayEl.classList.add(`bg-${userData}`);
-                    }
-
-                    // B. Atur Warna Angka jika Libur Nasional
-                    if (holidayName) {
-                        dayEl.style.color = "red";
-                        dayEl.style.fontWeight = "bold";
-                        dayEl.title = holidayName; 
-                    }
-
-                    // C. Tampilkan keduanya secara bertumpuk (Stacked)
-                    // Kita buat dua span terpisah agar tidak saling tindih
-                    // Tampilkan Angka Tanggal (Merah jika libur) dan Label secara terpisah
-                    dayEl.innerHTML = `
-                        <span class="date-num" style="${holidayName ? 'color: red; font-weight: bold;' : ''}">${d}</span>
-                        <div class="label-container">
-                            ${holidayName ? `<span class="holiday-label">${holidayName}</span>` : ''}
-                            ${userData ? `<span class="user-label">${userData.toUpperCase()}</span>` : ''}
-                        </div>
-                    `;
-                    
-                    dayEl.onclick = () => {
-                        // 1. LOGIKA HAPUS (HARUS DI PALING ATAS)
-                        // Jika user memilih 'Hapus Warna' (none), izinkan tanpa cek kuota
-                        if (selectedUser === 'none') {
-                            if (allData[dateId]) { 
-                                const yakinHapus = confirm(`Apakah anda tidak jadi libur di tanggal ${d} ${months[m]} 2026?`);
-                                if (yakinHapus) {
-                                    db.ref('holidays/' + dateId).remove();
-                                }
-                            }
-                            return; // Keluar dari fungsi setelah hapus
-                        }
-
-                        // 2. CEK APAKAH TANGGAL SUDAH DIISI ORANG LAIN
-                        // Mencegah karyawan menimpa jadwal temannya tanpa sengaja
-                        if (allData[dateId] && allData[dateId] !== selectedUser) {
-                            alert(`Tanggal ini sudah diambil oleh ${allData[dateId].toUpperCase()}. Gunakan 'Hapus Warna' terlebih dahulu jika ingin mengganti.`);
-                            return;
-                        }
-
-                        // 3. HITUNG KUOTA BULANAN
-                        let count = 0;
-                        const currentMonthPrefix = `2026-${String(m + 1).padStart(2, '0')}`;
-                        
-                        Object.keys(allData).forEach(date => {
-                            if (date.startsWith(currentMonthPrefix) && allData[date] === selectedUser) {
-                                count++;
-                            }
-                        });
-
-                        // 4. VALIDASI MAKSIMAL 4 HARI
-                        // Jika sudah 4 hari DAN tanggal yang diklik belum ada namanya, maka blokir
-                        if (count >= 5 && allData[dateId] !== selectedUser) {
-                            alert(`Karyawan ${selectedUser.toUpperCase()} sudah mencapai maksimal libur (5 hari) di bulan ${months[m]}!`);
-                            return;
-                        }
-
-                        // 5. KONFIRMASI SIMPAN
-                        const yakinLibur = confirm(`Apakah anda libur pada tanggal ${d} ${months[m]} 2026?`);
-                        if (yakinLibur) {
-                            db.ref('holidays/' + dateId).set(selectedUser);
-                        }
-                    };
-                    
-                    daysDiv.appendChild(dayEl);
-                }
-                box.appendChild(daysDiv);
-                container.appendChild(box);
-            }
-        }
-
-        function updateDashboard() {
-            const monthVal = document.getElementById('filter-month').value;
-            const container = document.getElementById('stats-container');
-            container.innerHTML = '';
-            const counts = {};
-            users.forEach(u => counts[u] = 0);
-            Object.keys(allData).forEach(date => {
-                if (date.startsWith(`2026-${monthVal}`)) {
-                    const user = allData[date];
-                    if (counts[user] !== undefined) counts[user]++;
-                }
-            });
-            users.forEach(u => {
-                const card = document.createElement('div');
-                card.className = 'stat-card';
-                card.style.borderLeftColor = `var(--${u})`;
-                card.innerHTML = `<h4>${u.toUpperCase()}</h4><div class="count">${counts[u]}</div><small style="color:#94a3b8">HARI LIBUR</small>`;
-                container.appendChild(card);
-            });
-        }
-
-        function init() {
-            const filterMonth = document.getElementById('filter-month');
-            months.forEach((m, idx) => {
-                filterMonth.innerHTML += `<option value="${String(idx+1).padStart(2, '0')}">${m}</option>`;
-            });
-            filterMonth.value = String(new Date().getMonth() + 1).padStart(2, '0');
-
-            document.querySelectorAll('.opt').forEach(opt => {
-                opt.onclick = function() {
-                    document.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedUser = this.dataset.user;
-                };
-            });
-
-            db.ref('holidays').on('value', (snapshot) => {
-                allData = snapshot.val() || {};
-                renderCalendar();
-                updateDashboard();
-            });
-        }
-        init();
-        // Fungsi untuk membuka/menutup dropdown
-        function toggleDropdown() {
-            const dropdown = document.getElementById("myDropdown");
-            dropdown.classList.toggle("show");
-        }
-
-        // Menutup dropdown jika user mengklik area lain di layar
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropbtn')) {
-                const dropdowns = document.getElementsByClassName("dropdown-content");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    let openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
-        // Fungsi switchView yang sudah disempurnakan
-        function switchView(viewId) {
-            // Sembunyikan semua tampilan
-            document.getElementById('control-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'none';
-            
-            // Tampilkan tampilan yang dipilih
-            document.getElementById(viewId).style.display = 'block';
-            
-            // Jika ke dashboard, update datanya
-            if (viewId === 'dashboard-view') {
-                updateDashboard();
-            }
-            
-            // Tutup kembali dropdown setelah memilih
-            document.getElementById("myDropdown").classList.remove("show");
-        }
-    </script>
+                <div id="user-list" style="margin-top:12px"></div>
+            </div>
+        </div>
+    </aside>
+    <!-- Toast container for non-blocking notifications -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
