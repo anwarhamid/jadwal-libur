@@ -972,4 +972,9 @@ function switchView(viewId) {
             if (drawer) drawer.setAttribute && drawer.setAttribute('aria-hidden','true');
         } catch (e) { /* ignore */ }
 }
-
+// BLOKIR DEVTOOLS ATAU F12
+setInterval(function() {
+    if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+        document.body.innerHTML = "<h1>Akses Ditolak! Tolong jangan mengintip kode.</h1>";
+    }
+}, 1000);
