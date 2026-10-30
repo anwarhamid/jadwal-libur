@@ -738,9 +738,15 @@ function updateDashboard() {
 function init() {
     // Ensure initial view visibility in case CSS classes and inline styles mismatch
     ensureInitialView();
-    // Sync year dropdown if present
+    // Sync year dropdown secara otomatis berdasarkan tahun saat ini (jika ada di pilihan)
     const yearSelect = document.getElementById('select-year');
     if (yearSelect) {
+        const nowYear = new Date().getFullYear().toString();
+        // Cek apakah tahun saat ini ada dalam opsi dropdown
+        const optionExists = Array.from(yearSelect.options).some(opt => opt.value === nowYear);
+        if (optionExists) {
+            yearSelect.value = nowYear;
+        }
         currentYear = parseInt(yearSelect.value, 10) || 2026;
     }
     // Load saved users (from previous sessions)
