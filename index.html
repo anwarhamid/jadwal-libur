@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Libur 2026</title>
+    <title>Jadwal Libur Karyawan</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔵</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -12,7 +12,11 @@
 <body>
     <nav style="display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; background: #1e293b; height: 60px; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000;">
         <div style="color: white; font-weight: bold; margin-right: auto; display:flex; align-items:center; gap:10px;">
-            <span id="site-title" role="button" tabindex="0" title="Buka Penjadwalan" style="cursor:pointer">JADWAL LIBUR 2026</span>
+            <span id="site-title" role="button" tabindex="0" title="Buka Penjadwalan" style="cursor:pointer">JADWAL LIBUR</span>
+            <select id="select-year" onchange="changeYear(this.value)" style="background: #334155; color: white; border: 1px solid #475569; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; outline: none;">
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
             <span id="firebase-status" title="Firebase connection" class="firebase-status offline" aria-hidden="false"></span>
         </div>
         <div class="dropdown" style="position: relative;">

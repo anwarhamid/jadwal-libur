@@ -3,8 +3,10 @@
 const db = window.db || (typeof firebase !== 'undefined' ? firebase.database() : null);
 
 const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-// Tambahkan data libur nasional 2026
+
+// Data libur nasional 2026 & 2027
 const nationalHolidays = {
+    // --- 2026 ---
     "2026-01-01": "New Year's Day",
     "2026-01-16": "Ascension of the Prophet Muhammad",
     "2026-02-17": "Chinese New Year's Day",
@@ -21,8 +23,28 @@ const nationalHolidays = {
     "2026-06-16": "Islamic New Year",
     "2026-08-17": "Indonesian Independence Day",
     "2026-08-25": "Maulid Nabi Muhammad",
-    "2026-12-25": "Christmas Day"
+    "2026-12-25": "Christmas Day",
+
+    // --- 2027 ---
+    "2027-01-01": "New Year's Day",
+    "2027-01-05": "Isra Mikraj",
+    "2027-02-06": "Chinese New Year's Day",
+    "2027-03-08": "Nyepi (Hindu New Year)",
+    "2027-03-10": "Idul Fitri Day 1",
+    "2027-03-11": "Idul Fitri Day 2",
+    "2027-03-26": "Good Friday",
+    "2027-03-28": "Easter Sunday",
+    "2027-05-01": "International Labor Day",
+    "2027-05-06": "Ascension Day of Jesus Christ",
+    "2027-05-17": "Idul Adha",
+    "2027-05-20": "Waisak Day",
+    "2027-06-01": "Pancasila Day",
+    "2027-06-06": "Islamic New Year",
+    "2027-08-14": "Maulid Nabi Muhammad",
+    "2027-08-17": "Indonesian Independence Day",
+    "2027-12-25": "Christmas Day"
 };
+
 // Default users; can be extended at runtime via settings
 let users = ["rizky", "farhan", "krisna", "putri", "siliya", "taufiq", "aprilia"];
 // Map name -> color (hex). Pre-seeded to match existing CSS variables/colors
@@ -40,12 +62,19 @@ let allData = {};
 // Map that holds display labels for users (e.g., 'anwar' -> 'ANWAR')
 let userDataLabelMap = {};
 
-const YEAR = 2026;
+let currentYear = 2026;
 const MAX_PER_MONTH = 5;
 const VALID_USERS = new Set([...users, 'none']);
 let firebaseConnected = false;
 // Keep logs only for this many days (remote + local)
 const LOG_RETENTION_DAYS = 15;
+
+// Fungsi untuk mengganti tahun dari dropdown navbar
+function changeYear(yearVal) {
+    currentYear = parseInt(yearVal, 10) || 2026;
+    renderCalendar();
+    updateDashboard();
+}
 
 // --- Logging helpers (defined early so calls from init won't ReferenceError) ---
 let localLogs = [];
@@ -280,38 +309,36 @@ function writeFirebaseRemove(path) {
 
 function renderCalendar() {
     const container = document.getElementById('calendar-container');
-    console.log('renderCalendar() called, db available:', !!db);
+    console.log('renderCalendar() called for year:', currentYear, 'db available:', !!db);
     container.innerHTML = '';
     for (let m = 0; m < 12; m++) {
         const box = document.createElement('div');
         box.className = 'month-box';
-        box.innerHTML = `<div class="month-title">${months[m]} 2026</div>`;
+        box.innerHTML = `<div class="month-title">${months[m]} ${currentYear}</div>`;
         const daysDiv = document.createElement('div');
         daysDiv.className = 'days';
         ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].forEach(d => daysDiv.innerHTML += `<div class="day-lbl">${d}</div>`);
-        const firstDay = new Date(2026, m, 1).getDay();
-        const totalDays = new Date(2026, m + 1, 0).getDate();
+        const firstDay = new Date(currentYear, m, 1).getDay();
+        const totalDays = new Date(currentYear, m + 1, 0).getDate();
         for (let i = 0; i < firstDay; i++) daysDiv.innerHTML += `<div class="day empty"></div>`;
         for (let d = 1; d <= totalDays; d++) {
-            const dateId = `2026-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dateId = `${currentYear}-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const dayEl = document.createElement('div');
             dayEl.className = 'day';
             
             const userData = allData[dateId];
             const holidayName = nationalHolidays[dateId]; 
 
-                    // A. Atur Background jika dipilih karyawan
-                    if (userData) {
-                        // If a CSS class for bg-user exists, add it; otherwise apply inline color from userColors
-                        const cssClassName = `bg-${userData}`;
-                        if (document.querySelector(`.${cssClassName}`) !== null) {
-                            dayEl.classList.add(cssClassName);
-                        } else if (userColors[userData]) {
-                            dayEl.style.background = userColors[userData];
-                            // ensure contrast for text
-                            dayEl.style.color = '#fff';
-                        }
-                    }
+            // A. Atur Background jika dipilih karyawan
+            if (userData) {
+                const cssClassName = `bg-${userData}`;
+                if (document.querySelector(`.${cssClassName}`) !== null) {
+                    dayEl.classList.add(cssClassName);
+                } else if (userColors[userData]) {
+                    dayEl.style.background = userColors[userData];
+                    dayEl.style.color = '#fff';
+                }
+            }
 
             // B. Atur Warna Angka jika Libur Nasional
             if (holidayName) {
@@ -321,22 +348,25 @@ function renderCalendar() {
             }
 
             // C. Tampilkan keduanya secara bertumpuk (Stacked)
-            // Kita buat dua span terpisah agar tidak saling tindih
-            // Tampilkan Angka Tanggal (Merah jika libur) dan Label secara terpisah
-                    dayEl.innerHTML = `
+            dayEl.innerHTML = `
                 <span class="date-num" style="${holidayName ? 'color: red; font-weight: bold;' : ''}">${d}</span>
                 <div class="label-container">
-                            ${holidayName ? `<span class="holiday-label">${holidayName}</span>` : ''}
-                            ${userData ? `<span class="user-label">${(userDataLabelMap && userDataLabelMap[ userData ]) ? userDataLabelMap[userData] : userData.toUpperCase()}</span>` : ''}
+                    ${holidayName ? `<span class="holiday-label">${holidayName}</span>` : ''}
+                    ${userData ? `<span class="user-label">${(userDataLabelMap && userDataLabelMap[ userData ]) ? userDataLabelMap[userData] : userData.toUpperCase()}</span>` : ''}
                 </div>
             `;
             
             dayEl.onclick = () => {
+                // 0. VALIDASI: Pastikan user sudah memilih nama karyawan atau tombol Hapus
+                if (!selectedUser) {
+                    showToast('Pilih nama karyawan terlebih dahulu!', 'warning');
+                    return;
+                }
+
                 // 1. LOGIKA HAPUS (HARUS DI PALING ATAS)
-                // Jika user memilih 'Hapus Warna' (none), izinkan tanpa cek kuota
                 if (selectedUser === 'none') {
                     if (allData[dateId]) { 
-                        const yakinHapus = confirm(`Apakah anda tidak jadi libur di tanggal ${d} ${months[m]} 2026?`);
+                        const yakinHapus = confirm(`Apakah anda tidak jadi libur di tanggal ${d} ${months[m]} ${currentYear}?`);
                         if (yakinHapus) {
                             writeFirebaseRemove('holidays/' + dateId)
                                 .then(() => { addLogEntry(dateId, 'remove', null); })
@@ -348,19 +378,18 @@ function renderCalendar() {
                                 });
                         }
                     }
-                    return; // Keluar dari fungsi setelah hapus
+                    return;
                 }
 
                 // 2. CEK APAKAH TANGGAL SUDAH DIISI ORANG LAIN
-                // Mencegah karyawan menimpa jadwal temannya tanpa sengaja
                 if (allData[dateId] && allData[dateId] !== selectedUser) {
-                    showToast(`Tanggal ini sudah diambil oleh ${allData[dateId].toUpperCase()}. Gunakan 'Hapus Warna' terlebih dahulu jika ingin mengganti.`, 'warning');
+                    showToast(`Tanggal ini sudah diambil oleh ${allData[dateId].toUpperCase()}. Gunakan 'Hapus' terlebih dahulu jika ingin mengganti.`, 'warning');
                     return;
                 }
 
                 // 3. HITUNG KUOTA BULANAN
                 let count = 0;
-                const currentMonthPrefix = `2026-${String(m + 1).padStart(2, '0')}`;
+                const currentMonthPrefix = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
                 
                 Object.keys(allData).forEach(date => {
                     if (date.startsWith(currentMonthPrefix) && allData[date] === selectedUser) {
@@ -368,27 +397,25 @@ function renderCalendar() {
                     }
                 });
 
-                // 4. VALIDASI MAKSIMAL 4 HARI
-                // Jika sudah 4 hari DAN tanggal yang diklik belum ada namanya, maka blokir
-                if (count >= 5 && allData[dateId] !== selectedUser) {
-                    showToast(`Karyawan ${selectedUser.toUpperCase()} sudah mencapai maksimal libur (5 hari) di bulan ${months[m]}!`, 'warning');
+                // 4. VALIDASI MAKSIMAL 5 HARI
+                if (count >= MAX_PER_MONTH && allData[dateId] !== selectedUser) {
+                    showToast(`Karyawan ${selectedUser.toUpperCase()} sudah mencapai maksimal libur (${MAX_PER_MONTH} hari) di bulan ${months[m]} ${currentYear}!`, 'warning');
                     return;
                 }
 
                 // 5. KONFIRMASI SIMPAN
-                const yakinLibur = confirm(`Apakah anda libur pada tanggal ${d} ${months[m]} 2026?`);
+                const yakinLibur = confirm(`Apakah anda libur pada tanggal ${d} ${months[m]} ${currentYear}?`);
                 if (yakinLibur) {
-                                writeFirebaseSet('holidays/' + dateId, selectedUser)
-                                    .then(() => {
-                                        // success
-                                        addLogEntry(dateId, 'set', selectedUser);
-                                    })
-                                    .catch(() => {
-                                        allData[dateId] = selectedUser;
-                                        renderCalendar();
-                                        updateDashboard();
-                                        addLogEntry(dateId, 'set', selectedUser, {pending:true});
-                                    });
+                    writeFirebaseSet('holidays/' + dateId, selectedUser)
+                        .then(() => {
+                            addLogEntry(dateId, 'set', selectedUser);
+                        })
+                        .catch(() => {
+                            allData[dateId] = selectedUser;
+                            renderCalendar();
+                            updateDashboard();
+                            addLogEntry(dateId, 'set', selectedUser, {pending:true});
+                        });
                 }
             };
             
@@ -457,6 +484,7 @@ function renderUserOptions() {
     users.forEach(u => {
         const el = document.createElement('div');
         el.className = 'opt';
+        if (selectedUser === u) el.classList.add('active');
         el.dataset.user = u;
         const dot = document.createElement('span');
         dot.className = 'dot';
@@ -478,19 +506,11 @@ function renderUserOptions() {
 
     // Reattach handlers: for normal opts and for the delete button
     container.querySelectorAll('.opt').forEach(opt => {
-        if (opt.classList.contains('btn-delete')) {
-            opt.onclick = function() {
-                document.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
-                this.classList.add('active');
-                selectedUser = this.dataset.user; // should be 'none'
-            };
-        } else {
-            opt.onclick = function() {
-                document.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
-                this.classList.add('active');
-                selectedUser = this.dataset.user;
-            };
-        }
+        opt.onclick = function() {
+            document.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            selectedUser = this.dataset.user;
+        };
     });
 }
 
@@ -573,38 +593,32 @@ function loadSavedUsers() {
             db.ref('settings/users').once('value').then(snapshot => {
                 const val = snapshot.val();
                 if (val) {
-                            // Expect val to be object mapping userKey -> { label, color }
-                            const snapshotKeys = Object.keys(val);
-                            const colors = {};
-                            const labels = {};
-                            // Try to preserve any locally-saved edits (localStorage) so failed firebase writes
-                            // don't immediately overwrite the user's local changes.
-                            let local = null;
-                            try { local = JSON.parse(localStorage.getItem('jadwal_users')); } catch (e) { local = null; }
-                            // Build merged users: union of snapshot keys and local keys (local-only appended)
-                            const mergedUsers = [];
-                            snapshotKeys.forEach(k => mergedUsers.push(k));
-                            if (local && Array.isArray(local.users)) {
-                                local.users.forEach(k => {
-                                    if (!mergedUsers.includes(k)) mergedUsers.push(k);
-                                });
-                            }
-                            // For each key prefer local color/label if present (so local edits survive until firebase agrees)
-                            mergedUsers.forEach(k => {
-                                const entry = val[k] || {};
-                                const localColor = (local && local.colors && local.colors[k]) ? local.colors[k] : null;
-                                const localLabel = (local && local.labels && local.labels[k]) ? local.labels[k] : null;
-                                colors[k] = localColor || entry.color || (userColors[k] || '#777');
-                                labels[k] = localLabel || entry.label || k.toUpperCase();
-                            });
-                            users = mergedUsers;
-                            userColors = Object.assign({}, userColors, colors);
-                            userDataLabelMap = Object.assign({}, userDataLabelMap, labels);
-                            // Persist merged result locally so we remain stable
-                            saveUsersToStorage();
-                            renderUserOptions();
-                            renderUserList();
-                        }
+                    const snapshotKeys = Object.keys(val);
+                    const colors = {};
+                    const labels = {};
+                    let local = null;
+                    try { local = JSON.parse(localStorage.getItem('jadwal_users')); } catch (e) { local = null; }
+                    const mergedUsers = [];
+                    snapshotKeys.forEach(k => mergedUsers.push(k));
+                    if (local && Array.isArray(local.users)) {
+                        local.users.forEach(k => {
+                            if (!mergedUsers.includes(k)) mergedUsers.push(k);
+                        });
+                    }
+                    mergedUsers.forEach(k => {
+                        const entry = val[k] || {};
+                        const localColor = (local && local.colors && local.colors[k]) ? local.colors[k] : null;
+                        const localLabel = (local && local.labels && local.labels[k]) ? local.labels[k] : null;
+                        colors[k] = localColor || entry.color || (userColors[k] || '#777');
+                        labels[k] = localLabel || entry.label || k.toUpperCase();
+                    });
+                    users = mergedUsers;
+                    userColors = Object.assign({}, userColors, colors);
+                    userDataLabelMap = Object.assign({}, userDataLabelMap, labels);
+                    saveUsersToStorage();
+                    renderUserOptions();
+                    renderUserList();
+                }
             }).catch(e => console.warn('loadSavedUsers firebase read failed', e));
         }
         // Always merge localStorage as fallback / offline edits
@@ -624,7 +638,6 @@ function saveUsersToStorage() {
         localStorage.setItem('jadwal_users', JSON.stringify({ users, colors: userColors, labels: userDataLabelMap }));
         // Also persist to Firebase for cross-client sync
         if (db) {
-            // convert arrays/maps to object mapping
             const obj = {};
             users.forEach(u => {
                 obj[u] = { label: userDataLabelMap[u] || u.toUpperCase(), color: userColors[u] || '#777' };
@@ -637,7 +650,6 @@ function saveUsersToStorage() {
 // Add a new user (name: id string, label: display, color: hex)
 function addUser(name, label, color) {
     if (!name) return { ok:false, msg: 'Nama user diperlukan' };
-    // stricter validation: only letters, numbers, dash/underscore allowed; length 2-24
     const key = name.toLowerCase().replace(/\s+/g, '-');
     if (!/^[a-z0-9_-]{2,24}$/.test(key)) return { ok:false, msg: 'Nama hanya huruf/angka/-/_ (2-24 karakter)' };
     if (users.includes(key)) return { ok:false, msg: 'User sudah ada' };
@@ -657,21 +669,20 @@ function editUser(oldKey, name, label, color) {
     if (!oldKey) return { ok:false, msg: 'User tidak ditemukan' };
     const newKey = name.toLowerCase().replace(/\s+/g, '-');
     if (!/^[a-z0-9_-]{2,24}$/.test(newKey)) return { ok:false, msg: 'Nama hanya huruf/angka/-/_ (2-24 karakter)' };
-    // if key changed and conflicts
     if (newKey !== oldKey && users.includes(newKey)) return { ok:false, msg: 'Nama baru sudah ada' };
-    // update arrays/maps
     const idx = users.indexOf(oldKey);
     if (idx === -1) return { ok:false, msg: 'User tidak ditemukan' };
     users[idx] = newKey;
-    // move color and label
     userColors[newKey] = color || userColors[oldKey] || '#777';
     userDataLabelMap[newKey] = label || userDataLabelMap[oldKey] || newKey.toUpperCase();
     if (newKey !== oldKey) {
         delete userColors[oldKey];
         delete userDataLabelMap[oldKey];
-        // Move any assigned holidays in allData from oldKey to newKey
         Object.keys(allData).forEach(date => {
-            if (allData[date] === oldKey) allData[date] = newKey;
+            if (allData[date] === oldKey) {
+                allData[date] = newKey;
+                if (db) writeFirebaseSet('holidays/' + date, newKey).catch(()=>{});
+            }
         });
     }
     saveUsersToStorage();
@@ -686,13 +697,14 @@ function editUser(oldKey, name, label, color) {
 function deleteUser(key) {
     const idx = users.indexOf(key);
     if (idx === -1) return { ok:false, msg: 'User tidak ditemukan' };
-    // remove from arrays/maps
     users.splice(idx, 1);
     delete userColors[key];
     delete userDataLabelMap[key];
-    // clear assignments in allData
     Object.keys(allData).forEach(date => {
-        if (allData[date] === key) delete allData[date];
+        if (allData[date] === key) {
+            delete allData[date];
+            if (db) writeFirebaseRemove('holidays/' + date).catch(()=>{});
+        }
     });
     saveUsersToStorage();
     renderUserOptions();
@@ -709,7 +721,7 @@ function updateDashboard() {
     const counts = {};
     users.forEach(u => counts[u] = 0);
     Object.keys(allData).forEach(date => {
-        if (date.startsWith(`2026-${monthVal}`)) {
+        if (date.startsWith(`${currentYear}-${monthVal}`)) {
             const user = allData[date];
             if (counts[user] !== undefined) counts[user]++;
         }
@@ -717,8 +729,8 @@ function updateDashboard() {
     users.forEach(u => {
         const card = document.createElement('div');
         card.className = 'stat-card';
-        card.style.borderLeftColor = `var(--${u})`;
-        card.innerHTML = `<h4>${u.toUpperCase()}</h4><div class="count">${counts[u]}</div><small style="color:#94a3b8">HARI LIBUR</small>`;
+        card.style.borderLeftColor = userColors[u] || `var(--${u})`;
+        card.innerHTML = `<h4>${(userDataLabelMap[u] || u).toUpperCase()}</h4><div class="count">${counts[u]}</div><small style="color:#94a3b8">HARI LIBUR (${currentYear})</small>`;
         container.appendChild(card);
     });
 }
@@ -726,6 +738,11 @@ function updateDashboard() {
 function init() {
     // Ensure initial view visibility in case CSS classes and inline styles mismatch
     ensureInitialView();
+    // Sync year dropdown if present
+    const yearSelect = document.getElementById('select-year');
+    if (yearSelect) {
+        currentYear = parseInt(yearSelect.value, 10) || 2026;
+    }
     // Load saved users (from previous sessions)
     loadSavedUsers();
     // Start monitoring connection to Firebase (updates `firebaseConnected`)
@@ -774,7 +791,7 @@ function init() {
         try {
             db.ref('.info/connected').once('value').then(snap => {
                 if (!snap.val()) {
-                        console.warn('Firebase initial connection: not connected (will monitor for reconnect).');
+                    console.warn('Firebase initial connection: not connected (will monitor for reconnect).');
                 }
             }).catch(e => console.warn('Initial connection check failed', e));
         } catch (e) { console.warn('Initial connection check error', e); }
@@ -808,14 +825,10 @@ function init() {
     try { renderCalendar(); } catch(e) {}
 
     // Wire settings drawer toggle buttons.
-    // Note: the settings drawer HTML is placed after the script tags in `index.html`.
-    // To avoid timing issues we query the elements inside the show/hide functions
-    // and use event delegation for close actions so handlers work regardless of parse order.
     const openBtn = document.getElementById('open-settings-btn');
     function showDrawer() {
         const overlayEl = document.getElementById('settings-overlay');
         const drawerEl = document.getElementById('settings-drawer');
-        // Ensure latest user data is rendered when the drawer opens (DOM for #user-list exists now)
         try { renderUserOptions(); } catch (e) { /* ignore if not present yet */ }
         try { renderUserList(); } catch (e) { /* ignore if not present yet */ }
         if (overlayEl) overlayEl.style.display = 'block';
@@ -828,15 +841,12 @@ function init() {
         if (drawerEl) drawerEl.setAttribute('aria-hidden','true');
     }
     if (openBtn) openBtn.onclick = showDrawer;
-    // Use event delegation so close button and overlay clicks work even if markup
-    // was parsed after this script executed.
     document.addEventListener('click', (e) => {
         const id = e.target && e.target.id;
         if (id === 'close-settings-btn' || id === 'settings-overlay') {
             hideDrawer();
         }
     });
-    // close on Escape
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDrawer(); });
 
     // Hook up add-user UI
@@ -849,7 +859,6 @@ function init() {
             const name = nameEl ? nameEl.value.trim() : '';
             const label = labelEl ? labelEl.value.trim() : '';
             const color = colorEl ? colorEl.value : '#777';
-            // If button in editing mode
             const editingKey = addBtn.dataset.editing;
             if (editingKey) {
                 const res = editUser(editingKey, name, label, color);
@@ -861,7 +870,6 @@ function init() {
                     renderUserList();
                 }
             } else {
-                // contrast validation: warn if chosen color has low contrast with recommended text
                 const recommended = recommendedTextColor(color);
                 const ratio = contrastRatio(color, recommended === '#ffffff' ? '#ffffff' : '#000000');
                 if (ratio < 3) {
@@ -901,13 +909,10 @@ function init() {
             const val = snap.val();
             if (!val) return;
             const cutoff = Date.now() - (LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-            // Only consider remote entries within retention window
             const remoteAll = Object.entries(val || {}).map(([k,v]) => v).filter(r => r && r.ts && r.ts >= cutoff);
-            // merge remote into localLogs without duplicates
             const map = {};
             localLogs.forEach(l => { const k = `${l.ts}|${l.action}|${l.subject}`; map[k]=l; });
             remoteAll.forEach(r => { const k = `${r.ts}|${r.action}|${r.subject}`; if (!map[k]) map[k]=r; });
-            // build array sorted by ts desc and enforce size limit
             const merged = Object.values(map).sort((a,b)=>b.ts - a.ts).slice(0,500);
             localLogs = merged;
             try { pruneLocalLogs(); localStorage.setItem('jadwal_logs', JSON.stringify(localLogs)); } catch(e){}
@@ -938,11 +943,10 @@ function init() {
             users = loadedUsers;
             userColors = Object.assign({}, userColors, colors);
             userDataLabelMap = Object.assign({}, userDataLabelMap, labels);
-            saveUsersToStorage(); // keep local copy in sync
+            saveUsersToStorage();
             renderUserOptions();
             renderUserList();
             renderCalendar();
-            // refresh log user filter options
             try {
                 const uf = document.getElementById('log-filter-user');
                 if (uf) {
@@ -961,6 +965,7 @@ function init() {
     try { pruneOldLogsRemote(); } catch(e){ console.warn('initial prune failed', e); }
 }
 init();
+
 // Fungsi untuk membuka/menutup dropdown
 function toggleDropdown() {
     const dropdown = document.getElementById("myDropdown");
@@ -982,15 +987,12 @@ window.onclick = function(event) {
 
 // Fungsi switchView yang sudah disempurnakan
 function switchView(viewId) {
-    // Sembunyikan semua tampilan
     document.getElementById('control-view').style.display = 'none';
     document.getElementById('dashboard-view').style.display = 'none';
 
-    // Tampilkan tampilan yang dipilih
     const el = document.getElementById(viewId);
     if (el) el.style.display = 'block';
 
-    // Update kelas active pada navigasi
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (viewId === 'control-view') {
         const nav = document.getElementById('nav-control');
@@ -1000,26 +1002,17 @@ function switchView(viewId) {
         if (nav) nav.classList.add('active');
     }
 
-    // Jika ke dashboard, update datanya
     if (viewId === 'dashboard-view') {
         updateDashboard();
     }
 
-    // Tutup kembali dropdown setelah memilih
     const dd = document.getElementById("myDropdown");
     if (dd) dd.classList.remove("show");
     
-        // Also close settings drawer/overlay if open so the selected view is visible
-        try {
-            const overlay = document.getElementById('settings-overlay');
-            const drawer = document.getElementById('settings-drawer');
-            if (overlay) overlay.style.display = 'none';
-            if (drawer) drawer.setAttribute && drawer.setAttribute('aria-hidden','true');
-        } catch (e) { /* ignore */ }
+    try {
+        const overlay = document.getElementById('settings-overlay');
+        const drawer = document.getElementById('settings-drawer');
+        if (overlay) overlay.style.display = 'none';
+        if (drawer) drawer.setAttribute && drawer.setAttribute('aria-hidden','true');
+    } catch (e) { /* ignore */ }
 }
-// BLOKIR DEVTOOLS ATAU F12
-// setInterval(function() {
-//    if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
-//         document.body.innerHTML = "<h1>Akses Ditolak! Tolong jangan mengintip kode.</h1>";
-//     }
-// }, 1000);
